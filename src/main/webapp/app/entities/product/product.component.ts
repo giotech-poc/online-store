@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { HttpHeaders, HttpResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { JhiEventManager, JhiDataUtils } from 'ng-jhipster';
+import { JhiEventManager, JhiDataUtils, JhiParseLinks } from 'ng-jhipster';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 import { IProduct } from 'app/shared/model/product.model';
@@ -16,7 +16,7 @@ import { ProductDeleteDialogComponent } from './product-delete-dialog.component'
   templateUrl: './product.component.html'
 })
 export class ProductComponent implements OnInit, OnDestroy {
-  products?: IProduct[];
+  products?: IProduct[] | null;
   eventSubscriber?: Subscription;
   totalItems = 0;
   itemsPerPage = ITEMS_PER_PAGE;
@@ -25,14 +25,29 @@ export class ProductComponent implements OnInit, OnDestroy {
   ascending!: boolean;
   ngbPaginationPage = 1;
 
+  filter: string | undefined;
+  reverse: any;
+  links: any;
+
   constructor(
     protected productService: ProductService,
     protected activatedRoute: ActivatedRoute,
     protected dataUtils: JhiDataUtils,
+    protected parseLinks: JhiParseLinks,
     protected router: Router,
     protected eventManager: JhiEventManager,
     protected modalService: NgbModal
   ) {}
+
+  loadAll() {
+    this.productService
+      .query({
+        page: this.page - 1,
+        size: this.itemsPerPage,
+        sort: this.sort()
+      })
+      .subscribe((res: HttpResponse<IProduct[]>) => this.paginateProducts(res.body, res.headers));
+  }
 
   loadPage(page?: number): void {
     const pageToLoad: number = page || this.page;
@@ -47,6 +62,17 @@ export class ProductComponent implements OnInit, OnDestroy {
         (res: HttpResponse<IProduct[]>) => this.onSuccess(res.body, res.headers, pageToLoad),
         () => this.onError()
       );
+  }
+
+  transition() {
+    this.router.navigate(['/product'], {
+      queryParams: {
+        page: this.page,
+        size: this.itemsPerPage,
+        sort: this.predicate + ',' + (this.reverse ? 'asc' : 'desc')
+      }
+    });
+    this.loadAll();
   }
 
   ngOnInit(): void {
@@ -111,5 +137,11 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   protected onError(): void {
     this.ngbPaginationPage = this.page;
+  }
+
+  private paginateProducts(data: IProduct[] | null, headers: HttpHeaders) {
+    this.links = this.parseLinks.parse(<string>headers.get('link'));
+    this.totalItems = parseInt(<string>headers.get('X-Total-Count'), 10);
+    this.products = data;
   }
 }

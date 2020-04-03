@@ -10,7 +10,9 @@ if (module['hot']) {
 }
 
 platformBrowserDynamic()
-  .bootstrapModule(StoreAppModule, { preserveWhitespaces: true })
+  .bootstrapModule(StoreAppModule, {
+    preserveWhitespaces: true
+  })
   // eslint-disable-next-line no-console
   .then(() => console.log('Application started'))
   .catch(err => console.error(err));
