@@ -187,3 +187,21 @@ To configure CI for your project, run the ci-cd sub-generator (`jhipster ci-cd`)
 [protractor]: https://angular.github.io/protractor/
 [leaflet]: https://leafletjs.com/
 [definitelytyped]: https://definitelytyped.org/
+
+HEROKU
+Pre distribuire l'applicazione su Heroku
+\$> jhipster hiroku
+
+e ridistribuirlo utilizzando il comando
+\$> heroku deploy:jar --jar build/libs/\*.jar
+
+Per eseguire l'applicazione in un browser:
+\$> heroku open -a <app>
+
+Per costruire il pacchetto
+\$> gradlew -Pprod bootJare
+
+## CI-CD
+
+    docker pull jenkinsci/blueocean
+    docker container run -d --name myjenkins -p 8989:8080 -p 50000:50000 jenkinsci/blueocean
